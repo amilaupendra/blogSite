@@ -1,12 +1,9 @@
 "use client";
 
-import Navbar from "@/app/components/navbar/page";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ImageIcon from "@mui/icons-material/Image";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-
-
-
+import BlogPost from "@/app/components/blogpost/page"
 
 const page = () => {
   const [title, setTitle] = useState("");
@@ -14,9 +11,13 @@ const page = () => {
   const [author, setAuthor] = useState("");
   const [date, setDate] = useState("2024-05-01 00:00:00");
   const [content, setContent] = useState("");
+  const[blogsArray, setblogsArray]= useState('')
+  const currentDate = new Date();
+
+  
+
 
   const [showBlogForm, setShowBlogForm] = useState(false);
-
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -26,37 +27,64 @@ const page = () => {
   const submitForm = async (event) => {
     event.preventDefault();
     const formData = {
-      Title:title,
-      ImageUrl:image,
-      Author:author,
-      PublishedDate:date,
-      Content:content,
+      Title: title,
+      ImageUrl: image,
+      Author: author,
+      PublishedDate: currentDate,
+      Content: content,
     };
 
     console.log(formData);
-    
-    if(title!=''&&author!=''&&content!=''){
-      const url ="https://lxgn0999u8.execute-api.ap-south-1.amazonaws.com/dev/blogpost";
 
-    const response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(formData), // Stringify the formData object
-    });
+    if (title != "" && author != "" && content != "") {
+      const url =
+        "https://lxgn0999u8.execute-api.ap-south-1.amazonaws.com/dev/blogpost";
 
-    if (response.ok) {
-      alert("succusfully submitted the form");
-      setTitle(""); // Clearing the form fields
-      setImage("");
-      setAuthor("");
-      setContent("");
-      setDate("");
-      setShowBlogForm(false);
+      const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(formData), // Stringify the formData object
+      });
+
+      if (response.ok) {
+        alert("succusfully submitted the form");
+        setTitle(""); // Clearing the form fields
+        setImage("");
+        setAuthor("");
+        setContent("");
+        setDate("");
+        setShowBlogForm(false);
+      }
+    } else {
+      return alert("abc");
     }
-    }else{
-      return alert('abc')
-    }
+  };
 
-    
+  useEffect(()=>{
+    fetchData();
+  },[])
+
+  const fetchData = async () => {
+    try {
+      // Make a GET request to your Lambda function endpoint
+      const response = await fetch("https://lxgn0999u8.execute-api.ap-south-1.amazonaws.com/dev/blogpost");
+  
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      // Parse the JSON response
+      const data = await response.json();
+      console.log("Data:", data);
+      setblogsArray(data);
+  
+      // Handle the retrieved data (e.g., update state, display in UI)
+      // Example: setBlogPosts(data);
+  
+    } catch (error) {
+      console.error("Error:", error.message);
+      // Handle errors (e.g., display error message to user)
+    }
   };
   
 
@@ -70,10 +98,14 @@ const page = () => {
     const selectedImage = event.target.files[0];
     // Here you can implement your upload logic, e.g., send the image to a server
     console.log("Selected image:", selectedImage);
-    setImage('image url')
+    setImage("image url");
   };
   return (
-    <div className={`h-svh md:mx-20 ${showBlogForm ? 'bg-black bg-opacity-50' : ''} `}>
+    <div
+      className={`h-svh md:mx-20 ${
+        showBlogForm ? "bg-black bg-opacity-50" : ""
+      } `}
+    >
       <div className=" h-[40%] bg-black flex justify-center items-center">
         <div className="avatar">
           <div className="w-12 h-12 rounded-full">
@@ -163,6 +195,19 @@ const page = () => {
       ) : (
         console.log("nothing happend..")
       )}
+
+      {blogsArray ? (
+        <div>
+        <div className="blog-page">
+          
+          {blogsArray.map((post, index) => (
+            <BlogPost key={index} {...post} />
+          ))}
+        </div>
+      </div>
+      ):''}
+
+      
     </div>
   );
 };
